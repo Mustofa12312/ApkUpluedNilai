@@ -13,6 +13,7 @@ dependencies:
   dropdown_button2: ^2.3.9
   flutter:
     sdk: flutter
+  flutter_launcher_icons: ^0.14.4
   get: ^4.7.2
   google_fonts: ^6.3.1
   supabase_flutter: ^2.10.1
@@ -24,3 +25,10 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+flutter_icons: # 👈 tambahkan di paling bawah
+  android: true
+  ios: true
+  image_path: "assets/icon/app_icon.png"
+  adaptive_icon_background: "#ffffff"
+  adaptive_icon_foreground: "assets/icon/app_icon.png"
