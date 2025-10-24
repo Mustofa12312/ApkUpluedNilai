@@ -5,9 +5,9 @@ class SupabaseService {
   static Future<void> init() async {
     await Supabase.initialize(
       url:
-          'https://qijvvjuewmigqbkiigyf.supabase.co', // ganti sesuai URL project
+          'https://pyedbocxchfvlafhuqdw.supabase.co', // ganti sesuai URL project
       anonKey:
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpanZ2anVld21pZ3Fia2lpZ3lmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg1NjIwMTgsImV4cCI6MjA3NDEzODAxOH0.vowvkP8jBQn-IOGLarr5DXhkZOyXdV4yXDkkiDQvCxI', // ganti sesuai anon key project
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB5ZWRib2N4Y2hmdmxhZmh1cWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAyMTUzOTksImV4cCI6MjA3NTc5MTM5OX0.S2kC2Y0R2ok4-Lmlc3WDRbI_EX6Kmm1pegdl6FGicFM', // ganti sesuai anon key project
     );
   }
 

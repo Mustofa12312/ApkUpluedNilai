@@ -16,6 +16,7 @@ dependencies:
   flutter_launcher_icons: ^0.14.4
   get: ^4.7.2
   google_fonts: ^6.3.1
+
   supabase_flutter: ^2.10.1
 
 dev_dependencies:

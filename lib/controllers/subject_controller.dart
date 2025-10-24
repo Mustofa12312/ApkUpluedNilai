@@ -12,9 +12,9 @@ class SubjectController extends GetxController {
   }
 
   Future<void> fetchSubjects() async {
-    final response =
-        await SupabaseService.client.from('subjects').select();
-    subjects.value =
-        (response as List).map((e) => Subject.fromJson(e)).toList();
+    final response = await SupabaseService.client.from('subjects').select();
+    subjects.value = (response as List)
+        .map((e) => Subject.fromJson(e))
+        .toList();
   }
 }

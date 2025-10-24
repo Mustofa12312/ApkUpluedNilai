@@ -57,18 +57,42 @@ class HomePage extends StatelessWidget {
             SizedBox(height: 13),
             Obx(() {
               final student = studentCtrl.student.value;
-              if (student == null) return Text('Data siswa belum ada');
-              return Card(
-                child: ListTile(
-                  title: Text(student.name),
-                  subtitle: Text(
-                    student.className != null
-                        ? 'Kelas: ${student.className}'
-                        : 'Kelas ID: ${student.classId}',
-                  ),
+              return AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                transitionBuilder: (child, animation) => SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, 0.3),
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: FadeTransition(opacity: animation, child: child),
                 ),
+                child: student == null
+                    ? Text('Data siswa belum ada', key: ValueKey('noData'))
+                    : Card(
+                        key: ValueKey(student.id),
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        shadowColor: Colors.amberAccent.withOpacity(0.4),
+                        child: ListTile(
+                          title: Text(
+                            student.name,
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          subtitle: Text(
+                            student.className != null
+                                ? 'Kelas: ${student.className}'
+                                : 'Kelas ID: ${student.classId}',
+                            style: GoogleFonts.poppins(fontSize: 13),
+                          ),
+                        ),
+                      ),
               );
             }),
+
             const SizedBox(height: 20),
 
             Obx(() {
@@ -150,78 +174,84 @@ class HomePage extends StatelessWidget {
               decoration: InputDecoration(labelText: 'Nilai'),
             ),
             const SizedBox(height: 20),
-            Obx(() {
-              return SizedBox(
-                width: double.infinity, // biar full lebar
-                height: 55, // tinggi tombol
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber, // warna tombol
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8), // sudut membulat
+            Obx(
+              () => AnimatedScale(
+                scale: gradeCtrl.isLoading.value ? 0.95 : 1.0,
+                duration: const Duration(milliseconds: 200),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 55,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.amber,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      elevation: 4,
                     ),
-                    elevation: 4, // bayangan halus
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 12,
-                    ),
-                  ),
-                  onPressed: gradeCtrl.isLoading.value
-                      ? null
-                      : () {
-                          final student = studentCtrl.student.value;
-                          final subject = selectedSubject.value;
-                          final grade = double.tryParse(gradeController.text);
-                          if (student != null &&
-                              subject != null &&
-                              grade != null) {
-                            gradeCtrl.uploadGrade(
-                              studentId: student.id,
-                              subjectId: subject.id,
-                              grade: grade,
-                            );
-                          } else {
-                            Get.snackbar(
-                              'Error',
-                              'Lengkapi data siswa, mapel, dan nilai',
-                            );
-                          }
-                        },
-                  child: gradeCtrl.isLoading.value
-                      ? Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
+                    onPressed: gradeCtrl.isLoading.value
+                        ? null
+                        : () {
+                            final student = studentCtrl.student.value;
+                            final subject = selectedSubject.value;
+                            final grade = double.tryParse(gradeController.text);
+                            if (student != null &&
+                                subject != null &&
+                                grade != null) {
+                              gradeCtrl
+                                  .uploadGrade(
+                                    studentId: student.id,
+                                    subjectId: subject.id,
+                                    grade: grade,
+                                  )
+                                  .then((_) {
+                                    idController.clear();
+                                    gradeController.clear();
+                                    studentCtrl.student.value = null;
+                                  });
+                            } else {
+                              Get.snackbar(
+                                'Error',
+                                'Lengkapi data siswa, mapel, dan nilai',
+                              );
+                            }
+                          },
+                    child: gradeCtrl.isLoading.value
+                        ? Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              "Mengupload...",
-                              style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
+                              const SizedBox(width: 12),
+                              Text(
+                                "Mengupload...",
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
                               ),
+                            ],
+                          )
+                        : Text(
+                            'Upload Nilai',
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                              fontSize: 22,
                             ),
-                          ],
-                        )
-                      : Text(
-                          'Upload Nilai',
-                          style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                            fontSize: 16,
                           ),
-                        ),
+                  ),
                 ),
-              );
-            }),
+              ),
+            ),
           ],
         ),
       ),
