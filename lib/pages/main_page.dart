@@ -2,6 +2,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'home_page.dart';
 import 'no_grade_page.dart';
+import 'final_exam_page.dart';
+import 'no_final_grade_page.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({Key? key}) : super(key: key);
@@ -13,12 +15,15 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = [HomePage(), NoGradePage()];
+  final List<Widget> _pages = const [
+    HomePage(), // Input Nilai Kuartal
+    NoGradePage(), // Tanpa Nilai Kuartal
+    FinalExamPage(), // Input Nilai Ujian Akhir
+    NoFinalGradePage(), // Tanpa Nilai Ujian Akhir
+  ];
 
   void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+    setState(() => _selectedIndex = index);
   }
 
   Widget _buildNavItem(IconData icon, String label, int index) {
@@ -31,30 +36,24 @@ class _MainPageState extends State<MainPage> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: isActive
-              ? Colors.amber.withOpacity(0.30)
-              : const Color.fromARGB(0, 94, 94, 94),
-          borderRadius: BorderRadius.circular(10),
+              ? Colors.white.withOpacity(0.25)
+              : Colors.white.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
         ),
         child: Row(
           children: [
-            TweenAnimationBuilder<double>(
-              tween: Tween<double>(begin: 1.0, end: isActive ? 1.3 : 1.0),
-              duration: const Duration(milliseconds: 250),
-              builder: (context, scale, child) => Transform.scale(
-                scale: scale,
-                child: Icon(
-                  icon,
-                  color: isActive ? Colors.amber.shade700 : Colors.grey[600],
-                  size: 28,
-                ),
-              ),
+            Icon(
+              icon,
+              color: isActive ? Colors.white : Colors.white70,
+              size: 24,
             ),
             if (isActive) ...[
               const SizedBox(width: 6),
               Text(
                 label,
-                style: TextStyle(
-                  color: Colors.amber.shade700,
+                style: const TextStyle(
+                  color: Colors.white,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -68,49 +67,57 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true, // penting untuk efek blur menyatu ke background
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
         child: _pages[_selectedIndex],
-        transitionBuilder: (child, animation) {
-          return SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0.1, 0),
-              end: Offset.zero,
-            ).animate(animation),
-            child: FadeTransition(opacity: animation, child: child),
-          );
-        },
       ),
       bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(12.0),
+        padding: const EdgeInsets.all(16.0),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(30),
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
             child: Container(
-              height: 70,
+              height: 75,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(30),
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.white.withOpacity(0.3),
+                    Colors.white.withOpacity(0.05),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.2),
+                  width: 1.2,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 15,
-                    offset: const Offset(0, 5),
+                    color: Colors.black.withOpacity(0.15),
+                    blurRadius: 25,
+                    offset: const Offset(0, 8),
                   ),
                 ],
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildNavItem(Icons.home_rounded, 'Home', 0),
-                  _buildNavItem(Icons.error_outline_rounded, 'Tanpa Nilai', 1),
+                  _buildNavItem(Icons.calendar_month_rounded, 'Kuartal', 0),
+                  _buildNavItem(Icons.warning_amber_rounded, 'Kuartal', 1),
+                  _buildNavItem(Icons.school_rounded, 'Ujian Akhir', 2),
+                  _buildNavItem(Icons.error_outline_rounded, 'Ujian Akhir', 3),
                 ],
               ),
             ),
           ),
         ),
       ),
+      backgroundColor: const Color(
+        0xFF0F0F0F,
+      ), // biar kontras dengan efek glass
     );
   }
 }

@@ -4,14 +4,14 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/supabase_service.dart';
 
-class NoGradePage extends StatefulWidget {
-  const NoGradePage({Key? key}) : super(key: key);
+class NoFinalGradePage extends StatefulWidget {
+  const NoFinalGradePage({Key? key}) : super(key: key);
 
   @override
-  State<NoGradePage> createState() => _NoGradePageState();
+  State<NoFinalGradePage> createState() => _NoFinalGradePageState();
 }
 
-class _NoGradePageState extends State<NoGradePage> {
+class _NoFinalGradePageState extends State<NoFinalGradePage> {
   final students = <Map<String, dynamic>>[].obs;
   final classes = <Map<String, dynamic>>[].obs;
   final subjects = <Map<String, dynamic>>[].obs;
@@ -30,37 +30,24 @@ class _NoGradePageState extends State<NoGradePage> {
     fetchSubjects();
   }
 
-  // Ambil daftar kelas
   Future<void> fetchClasses() async {
     try {
       final response = await SupabaseService.client.from('classes').select();
       classes.assignAll(List<Map<String, dynamic>>.from(response));
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Gagal memuat kelas: $e',
-        backgroundColor: Colors.redAccent,
-        colorText: Colors.white,
-      );
+      Get.snackbar('Error', 'Gagal memuat kelas: $e');
     }
   }
 
-  // Ambil daftar mata pelajaran
   Future<void> fetchSubjects() async {
     try {
       final response = await SupabaseService.client.from('subjects').select();
       subjects.assignAll(List<Map<String, dynamic>>.from(response));
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Gagal memuat pelajaran: $e',
-        backgroundColor: Colors.redAccent,
-        colorText: Colors.white,
-      );
+      Get.snackbar('Error', 'Gagal memuat pelajaran: $e');
     }
   }
 
-  // Ambil nama mata pelajaran dari ID
   String _getSubjectNameById(String id) {
     try {
       final m = subjects.firstWhere((s) => s['id'].toString() == id);
@@ -70,23 +57,16 @@ class _NoGradePageState extends State<NoGradePage> {
     }
   }
 
-  // Ambil siswa yang belum punya nilai di grades_kuartal
   Future<void> fetchStudentsWithoutGrades() async {
     if (selectedClassId.value.isEmpty || selectedSubjectId.value.isEmpty) {
-      Get.snackbar(
-        'Peringatan',
-        'Pilih kelas dan pelajaran terlebih dahulu',
-        backgroundColor: Colors.orange,
-        colorText: Colors.white,
-      );
+      Get.snackbar('Peringatan', 'Pilih kelas dan pelajaran terlebih dahulu');
       return;
     }
 
     isLoading.value = true;
     try {
-      // Ambil semua student_id yang sudah punya nilai di grades_kuartal
       final gradeIdsResponse = await SupabaseService.client
-          .from('grades_kuartal')
+          .from('grades_ujian_akhir')
           .select('student_id')
           .eq('subject_id', int.parse(selectedSubjectId.value));
 
@@ -95,9 +75,8 @@ class _NoGradePageState extends State<NoGradePage> {
           .where((id) => id != null)
           .toList();
 
-      // Ambil siswa di kelas yang belum punya nilai pada mata pelajaran itu
       final result = await SupabaseService.client
-          .from('students_kuartal')
+          .from('students_ujian_akhir')
           .select('id, name, class_id, classes(name)')
           .eq('class_id', int.parse(selectedClassId.value))
           .not('id', 'in', gradeIds.isEmpty ? [0] : gradeIds)
@@ -105,12 +84,7 @@ class _NoGradePageState extends State<NoGradePage> {
 
       students.assignAll(List<Map<String, dynamic>>.from(result));
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        e.toString(),
-        backgroundColor: Colors.redAccent,
-        colorText: Colors.white,
-      );
+      Get.snackbar('Error', e.toString());
     } finally {
       isLoading.value = false;
     }
@@ -125,7 +99,7 @@ class _NoGradePageState extends State<NoGradePage> {
         centerTitle: true,
         elevation: 0,
         title: Text(
-          "Murid Tanpa Nilai",
+          "Tanpa Nilai Ujian",
           style: GoogleFonts.poppins(
             fontWeight: FontWeight.w600,
             color: Colors.white,
@@ -139,8 +113,8 @@ class _NoGradePageState extends State<NoGradePage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Dropdown Kelas
-              Obx(
-                () => _glassField(
+              Obx(() {
+                return _glassField(
                   focusNode: classFocus,
                   child: DropdownButtonFormField<String>(
                     value: selectedClassId.value.isEmpty
@@ -165,13 +139,13 @@ class _NoGradePageState extends State<NoGradePage> {
                         .toList(),
                     onChanged: (val) => selectedClassId.value = val ?? '',
                   ),
-                ),
-              ),
-              const SizedBox(height: 6),
+                );
+              }),
+              const SizedBox(height: 3),
 
               // Dropdown Pelajaran
-              Obx(
-                () => _glassField(
+              Obx(() {
+                return _glassField(
                   focusNode: subjectFocus,
                   child: DropdownButtonFormField<String>(
                     value: selectedSubjectId.value.isEmpty
@@ -196,20 +170,16 @@ class _NoGradePageState extends State<NoGradePage> {
                         .toList(),
                     onChanged: (val) => selectedSubjectId.value = val ?? '',
                   ),
-                ),
-              ),
-              const SizedBox(height: 12),
+                );
+              }),
+              const SizedBox(height: 10),
 
               // Tombol Cari
               Obx(
                 () => SizedBox(
                   height: 48,
                   child: ElevatedButton.icon(
-                    icon: const Icon(
-                      Icons.search,
-                      color: Colors.white,
-                      size: 26,
-                    ),
+                    icon: const Icon(Icons.search, color: Colors.white),
                     label: Text(
                       "Cari Murid",
                       style: GoogleFonts.poppins(
@@ -219,7 +189,7 @@ class _NoGradePageState extends State<NoGradePage> {
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blueAccent,
+                      backgroundColor: Colors.blue,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
@@ -230,9 +200,9 @@ class _NoGradePageState extends State<NoGradePage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 10),
 
-              // List siswa tanpa nilai
+              // List Siswa
               Expanded(
                 child: Obx(() {
                   if (isLoading.value) {
@@ -243,7 +213,7 @@ class _NoGradePageState extends State<NoGradePage> {
                   if (students.isEmpty) {
                     return Center(
                       child: Text(
-                        "Belum ada siswa tanpa nilai untuk kelas/pelajaran ini.",
+                        "Tidak ada siswa yang belum memiliki nilai ujian akhir.",
                         style: GoogleFonts.poppins(
                           color: Colors.grey,
                           fontSize: 16,
@@ -268,16 +238,11 @@ class _NoGradePageState extends State<NoGradePage> {
 
                       return _glassField(
                         child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
                           leading: CircleAvatar(
                             backgroundColor: Colors.blue,
                             child: Text(
                               '${index + 1}',
                               style: const TextStyle(
-                                fontSize: 14,
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -286,7 +251,7 @@ class _NoGradePageState extends State<NoGradePage> {
                           title: Text(
                             name.isNotEmpty ? name : '(Tanpa Nama)',
                             style: GoogleFonts.poppins(
-                              color: Colors.white,
+                              color: Colors.blue,
                               fontWeight: FontWeight.w600,
                               fontSize: 15,
                             ),
@@ -294,15 +259,15 @@ class _NoGradePageState extends State<NoGradePage> {
                           subtitle: Text(
                             '$className\nPelajaran: $subjectName',
                             style: GoogleFonts.poppins(
+                              fontSize: 12,
                               color: Colors.white,
-                              fontSize: 13,
                             ),
                           ),
                           trailing: Text(
                             'ID: $id',
                             style: GoogleFonts.poppins(
                               color: Colors.grey[400],
-                              fontSize: 14,
+                              fontSize: 12,
                             ),
                           ),
                         ),
@@ -318,7 +283,6 @@ class _NoGradePageState extends State<NoGradePage> {
     );
   }
 
-  // Widget glassmorphism
   Widget _glassField({required Widget child, FocusNode? focusNode}) {
     final isFocused = focusNode?.hasFocus ?? false;
     return ClipRRect(
@@ -327,7 +291,7 @@ class _NoGradePageState extends State<NoGradePage> {
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
           margin: const EdgeInsets.symmetric(vertical: 6),
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(isFocused ? 0.2 : 0.1),

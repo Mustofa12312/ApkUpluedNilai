@@ -4,20 +4,21 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/supabase_service.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+class FinalExamPage extends StatefulWidget {
+  const FinalExamPage({Key? key}) : super(key: key);
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<FinalExamPage> createState() => _FinalExamPageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _FinalExamPageState extends State<FinalExamPage> {
   final TextEditingController idController = TextEditingController();
   final TextEditingController gradeController = TextEditingController();
 
   final Rxn<Map<String, dynamic>> studentData = Rxn<Map<String, dynamic>>();
   final RxBool isLoading = false.obs;
   final RxBool isSubjectsLoading = false.obs;
+
   final RxList<Map<String, dynamic>> subjects = <Map<String, dynamic>>[].obs;
   final RxnInt selectedSubjectId = RxnInt();
 
@@ -39,7 +40,7 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  // Ambil daftar mata pelajaran
+  // 🔹 Ambil daftar mata pelajaran
   Future<void> fetchSubjects() async {
     try {
       isSubjectsLoading.value = true;
@@ -48,34 +49,25 @@ class _HomePageState extends State<HomePage> {
           .select('id, name');
       subjects.value = List<Map<String, dynamic>>.from(response);
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Gagal memuat daftar pelajaran: $e',
-        backgroundColor: Colors.redAccent,
-        colorText: Colors.white,
-      );
+      Get.snackbar('Error', 'Gagal memuat daftar pelajaran: $e');
     } finally {
       isSubjectsLoading.value = false;
     }
   }
 
-  // Ambil data siswa berdasarkan ID
+  // 🔹 Ambil data siswa berdasarkan ID
   Future<void> fetchStudentById() async {
     final idText = idController.text.trim();
     if (idText.isEmpty) {
-      Get.snackbar(
-        'Peringatan',
-        'Masukkan ID siswa terlebih dahulu',
-        backgroundColor: Colors.blue,
-        colorText: Colors.white,
-      );
+      Get.snackbar('Peringatan', 'Masukkan ID siswa terlebih dahulu');
       return;
     }
+
     try {
       isLoading.value = true;
       final response = await SupabaseService.client
-          .from('students_kuartal')
-          .select('id, name, class_id, classes(name)')
+          .from('students_ujian_akhir')
+          .select('id, name, class_id, classes(name), addresses(name)')
           .eq('id', int.parse(idText))
           .maybeSingle();
 
@@ -83,87 +75,42 @@ class _HomePageState extends State<HomePage> {
         studentData.value = response;
       } else {
         studentData.value = null;
-        Get.snackbar(
-          'Info',
-          'Siswa dengan ID $idText tidak ditemukan',
-          backgroundColor: Colors.blueGrey,
-          colorText: Colors.white,
-        );
+        Get.snackbar('Info', 'Siswa dengan ID $idText tidak ditemukan');
       }
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        e.toString(),
-        backgroundColor: Colors.redAccent,
-        colorText: Colors.white,
-      );
+      Get.snackbar('Error', e.toString());
     } finally {
       isLoading.value = false;
     }
   }
 
-  // Upload nilai kuartal
+  // 🔹 Upload nilai ujian akhir
   Future<void> uploadGrade() async {
     if (studentData.value == null) {
-      Get.snackbar(
-        'Error',
-        'Cari siswa terlebih dahulu',
-        backgroundColor: Colors.redAccent,
-        colorText: Colors.white,
-      );
+      Get.snackbar('Error', 'Cari siswa terlebih dahulu');
       return;
     }
     if (gradeController.text.isEmpty) {
-      Get.snackbar(
-        'Error',
-        'Masukkan nilai terlebih dahulu',
-        backgroundColor: Colors.orange,
-        colorText: Colors.white,
-      );
+      Get.snackbar('Error', 'Masukkan nilai terlebih dahulu');
       return;
     }
     if (selectedSubjectId.value == null) {
-      Get.snackbar(
-        'Error',
-        'Pilih mata pelajaran terlebih dahulu',
-        backgroundColor: Colors.blue,
-        colorText: Colors.white,
-      );
+      Get.snackbar('Error', 'Pilih mata pelajaran terlebih dahulu');
       return;
     }
 
     try {
       final gradeValue = double.parse(gradeController.text);
-      await SupabaseService.client.from('grades_kuartal').insert({
+      await SupabaseService.client.from('grades_ujian_akhir').insert({
         'student_id': studentData.value!['id'],
         'subject_id': selectedSubjectId.value,
         'grade': gradeValue,
       });
-
-      // Snackbar sukses
-      Get.snackbar(
-        'Sukses',
-        'Nilai berhasil diupload',
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
-        duration: const Duration(seconds: 2),
-      );
-
-      // Reset hanya ID dan nilai
-      idController.clear();
+      Get.snackbar('Sukses', 'Nilai ujian akhir berhasil diupload');
       gradeController.clear();
-      studentData.value = null;
-
-      // Fokus kembali ke ID
-      idFocus.requestFocus();
+      selectedSubjectId.value = null;
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        e.toString(),
-        backgroundColor: Colors.redAccent,
-        colorText: Colors.white,
-      );
+      Get.snackbar('Error', e.toString());
     }
   }
 
@@ -173,7 +120,7 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: const Color(0xFF0F0F0F),
       appBar: AppBar(
         title: Text(
-          "Input Nilai Kuartal",
+          "Input Nilai Ujian",
           style: GoogleFonts.poppins(
             color: Colors.white,
             fontWeight: FontWeight.w600,
@@ -189,24 +136,27 @@ class _HomePageState extends State<HomePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Dropdown Mata Pelajaran di atas
+              // 🔹 Dropdown Mata Pelajaran
               Obx(() {
-                if (isSubjectsLoading.value)
-                  return const CircularProgressIndicator(color: Colors.amber);
+                if (isSubjectsLoading.value) {
+                  return const CircularProgressIndicator(color: Colors.indigo);
+                }
                 return _glassField(
                   child: DropdownButtonFormField<int>(
-                    value: selectedSubjectId.value,
-                    dropdownColor: Colors.black87,
+                    value: selectedSubjectId.value == 0
+                        ? null
+                        : selectedSubjectId.value,
+                    dropdownColor: Colors.black,
                     decoration: const InputDecoration(
                       border: InputBorder.none,
                       hintText: 'Pilih Mata Pelajaran',
                       hintStyle: TextStyle(color: Colors.white),
                     ),
-                    items: subjects.map((subj) {
+                    items: subjects.map((subject) {
                       return DropdownMenuItem<int>(
-                        value: subj['id'],
+                        value: subject['id'],
                         child: Text(
-                          subj['name'],
+                          subject['name'],
                           style: const TextStyle(color: Colors.white),
                         ),
                       );
@@ -217,7 +167,7 @@ class _HomePageState extends State<HomePage> {
               }),
               const SizedBox(height: 1),
 
-              // Input ID Siswa
+              // 🔹 Input ID Siswa
               _glassField(
                 focusNode: idFocus,
                 child: TextField(
@@ -225,22 +175,23 @@ class _HomePageState extends State<HomePage> {
                   focusNode: idFocus,
                   keyboardType: TextInputType.number,
                   style: const TextStyle(color: Colors.white),
-                  cursorColor: Colors.blueAccent,
+                  cursorColor: Colors.indigoAccent,
                   decoration: const InputDecoration(
                     hintText: "Masukkan ID Murid",
                     hintStyle: TextStyle(color: Colors.white),
                     border: InputBorder.none,
-                    suffixIcon: Icon(Icons.search, color: Colors.white70),
+                    suffixIcon: Icon(Icons.search, color: Colors.white),
                   ),
                   onSubmitted: (_) => fetchStudentById(),
                 ),
               ),
               const SizedBox(height: 1),
 
-              // Info Siswa
+              // 🔹 Info Siswa (Nama, Kelas, Alamat)
               Obx(() {
-                if (isLoading.value)
-                  return const CircularProgressIndicator(color: Colors.amber);
+                if (isLoading.value) {
+                  return const CircularProgressIndicator(color: Colors.indigo);
+                }
                 if (studentData.value == null) return const SizedBox();
                 final student = studentData.value!;
                 return _glassField(
@@ -250,17 +201,25 @@ class _HomePageState extends State<HomePage> {
                       Text(
                         student['name'] ?? '(Tanpa Nama)',
                         style: GoogleFonts.poppins(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w500,
                           color: Colors.white,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 1),
                       Text(
-                        "Kelas: ${student['classes']?['name'] ?? '-'}",
+                        "Rayon: ${student['classes']?['name'] ?? '-'}",
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 0),
+                      Text(
+                        "Madrasah: ${student['addresses']?['name'] ?? '(Belum diatur)'}",
                         style: GoogleFonts.poppins(
                           color: Colors.white70,
-                          fontSize: 17,
+                          fontSize: 15,
                         ),
                       ),
                     ],
@@ -269,7 +228,7 @@ class _HomePageState extends State<HomePage> {
               }),
               const SizedBox(height: 1),
 
-              // Input Nilai
+              // 🔹 Input Nilai
               _glassField(
                 focusNode: gradeFocus,
                 child: TextField(
@@ -277,34 +236,35 @@ class _HomePageState extends State<HomePage> {
                   focusNode: gradeFocus,
                   keyboardType: TextInputType.number,
                   style: const TextStyle(color: Colors.white),
-                  cursorColor: Colors.blueAccent,
+                  cursorColor: Colors.indigoAccent,
                   decoration: const InputDecoration(
-                    hintText: "Masukkan Nilai Kuartal",
+                    hintText: "Masukkan Nilai Ujian",
                     border: InputBorder.none,
-                    hintStyle: TextStyle(color: Colors.white70),
+                    hintStyle: TextStyle(color: Colors.white),
                   ),
                 ),
               ),
               const SizedBox(height: 10),
 
-              // Tombol Simpan
+              // 🔹 Tombol Simpan
               SizedBox(
                 height: 48,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueAccent.withOpacity(0.3),
+                    backgroundColor: Colors.indigoAccent.withOpacity(0.3),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(14),
                       side: BorderSide(
-                        color: Colors.blueAccent.withOpacity(0.5),
+                        color: Colors.indigoAccent.withOpacity(0.5),
                       ),
                     ),
                     elevation: 6,
                   ),
                   onPressed: uploadGrade,
                   child: const Text(
-                    'Input Nilai',
+                    'Simpan Nilai',
                     style: TextStyle(
+                      fontSize: 17,
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
                     ),
@@ -318,7 +278,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Widget glassmorphism
+  // 🔹 Glass Effect Field Wrapper
   Widget _glassField({required Widget child, FocusNode? focusNode}) {
     final isFocused = focusNode?.hasFocus ?? false;
     return ClipRRect(
@@ -327,11 +287,11 @@ class _HomePageState extends State<HomePage> {
         filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
           margin: const EdgeInsets.symmetric(vertical: 6),
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(isFocused ? 0.2 : 0.1),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: Colors.white.withOpacity(isFocused ? 0.4 : 0.2),
             ),

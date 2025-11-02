@@ -42,7 +42,7 @@ class _LoginPageState extends State<LoginPage>
       end: 1,
     ).animate(CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut));
 
-    // ganti subtitle dinamis setiap 3 detik
+    // teks dinamis setiap 3 detik
     Timer.periodic(const Duration(seconds: 3), (timer) {
       if (!mounted) return;
       setState(() {
@@ -52,9 +52,7 @@ class _LoginPageState extends State<LoginPage>
       });
     });
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _animCtrl.forward();
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _animCtrl.forward());
   }
 
   @override
@@ -110,26 +108,27 @@ class _LoginPageState extends State<LoginPage>
 
     return Scaffold(
       body: Stack(
+        fit: StackFit.expand,
         children: [
-          // background gradient
+          // 💫 Background soft blur seperti iOS lockscreen
           Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.amber.shade800, Colors.amber.shade400],
+                colors: [Color(0xFFdfe9f3), Color(0xFFffffff)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
             ),
           ),
-
-          // moving light reflection effect
-          Positioned.fill(
-            child: AnimatedBuilder(
-              animation: _animCtrl,
-              builder: (context, _) {
-                return CustomPaint(painter: _LightPainter(_animCtrl.value));
-              },
-            ),
+          Positioned(
+            top: -100,
+            left: -100,
+            child: _glowCircle(300, Colors.blueAccent.withOpacity(0.2)),
+          ),
+          Positioned(
+            bottom: -120,
+            right: -100,
+            child: _glowCircle(300, Colors.blueAccent.withOpacity(0.2)),
           ),
 
           Center(
@@ -137,161 +136,138 @@ class _LoginPageState extends State<LoginPage>
               position: _slideAnim,
               child: FadeTransition(
                 opacity: _fadeAnim,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 420),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 32,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(30),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 28,
+                        vertical: 36,
+                      ),
+                      width: mq.width * 0.9,
+                      constraints: const BoxConstraints(maxWidth: 420),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.25),
+                        borderRadius: BorderRadius.circular(30),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.3),
+                          width: 1.5,
                         ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.40),
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black26,
-                              blurRadius: 20,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Hero(
-                              tag: 'app-logo',
-                              child: CircleAvatar(
-                                radius: 40,
-                                backgroundColor: Colors.white.withOpacity(0.2),
-                                child: Icon(
-                                  Icons.school,
-                                  size: 42,
-                                  color: Colors.amber.shade900,
-                                ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 30,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Hero(
+                            tag: 'app-logo',
+                            child: CircleAvatar(
+                              radius: 42,
+                              backgroundColor: Colors.white.withOpacity(0.2),
+                              child: const Icon(
+                                Icons.school_rounded,
+                                color: Colors.black87,
+                                size: 42,
                               ),
                             ),
-                            const SizedBox(height: 14),
-                            Text(
-                              'LPNS Input Nilai',
+                          ),
+                          const SizedBox(height: 14),
+                          Text(
+                            'LPNS Input Nilai',
+                            style: GoogleFonts.poppins(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 600),
+                            child: Text(
+                              subtitleText,
+                              key: ValueKey(subtitleText),
                               style: GoogleFonts.poppins(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                                letterSpacing: 0.5,
+                                color: Colors.black54,
+                                fontSize: 13,
                               ),
                             ),
-                            AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 600),
-                              child: Text(
-                                subtitleText,
-                                key: ValueKey(subtitleText),
-                                style: GoogleFonts.poppins(
-                                  color: Colors.white70,
-                                  fontSize: 13,
+                          ),
+                          const SizedBox(height: 24),
+
+                          _buildTextField(
+                            controller: emailController,
+                            hint: 'Email',
+                            icon: Icons.email_outlined,
+                            keyboardType: TextInputType.emailAddress,
+                          ),
+                          const SizedBox(height: 14),
+                          _buildTextField(
+                            controller: passwordController,
+                            hint: 'Password',
+                            obscure: obscure,
+                            icon: Icons.lock_outline,
+                            suffix: IconButton(
+                              icon: Icon(
+                                obscure
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                                color: Colors.black54,
+                              ),
+                              onPressed: () =>
+                                  setState(() => obscure = !obscure),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+
+                          // Tombol login bergaya iPhone glass
+                          SizedBox(
+                            width: double.infinity,
+                            height: 52,
+                            child: ElevatedButton(
+                              onPressed: isLoading ? null : _login,
+                              style: ElevatedButton.styleFrom(
+                                elevation: 0,
+                                backgroundColor: Colors.white.withOpacity(0.7),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
                                 ),
                               ),
-                            ),
-                            const SizedBox(height: 24),
-
-                            _buildTextField(
-                              controller: emailController,
-                              hint: 'Email',
-                              icon: Icons.email_outlined,
-                              autofocus: true,
-                              keyboardType: TextInputType.emailAddress,
-                            ),
-                            const SizedBox(height: 14),
-                            _buildTextField(
-                              controller: passwordController,
-                              hint: 'Password',
-                              obscure: obscure,
-                              icon: Icons.lock_outline,
-                              suffix: IconButton(
-                                icon: Icon(
-                                  obscure
-                                      ? Icons.visibility_off
-                                      : Icons.visibility,
-                                ),
-                                color: Colors.white70,
-                                onPressed: () =>
-                                    setState(() => obscure = !obscure),
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-
-                            // Shimmer glow button
-                            SizedBox(
-                              width: double.infinity,
-                              height: 52,
-                              child: InkWell(
-                                onTap: isLoading ? null : _login,
-                                borderRadius: BorderRadius.circular(14),
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 500),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(14),
-                                    gradient: LinearGradient(
-                                      colors: isLoading
-                                          ? [
-                                              Colors.amber.shade600,
-                                              Colors.amber.shade700,
-                                            ]
-                                          : [
-                                              Colors.amber.shade700,
-                                              Colors.amber.shade500,
-                                            ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.amber.withOpacity(0.4),
-                                        blurRadius: 15,
-                                        offset: const Offset(0, 6),
+                              child: isLoading
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.black,
                                       ),
-                                    ],
-                                  ),
-                                  child: Center(
-                                    child: isLoading
-                                        ? const SizedBox(
-                                            height: 20,
-                                            width: 20,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                              color: Colors.white,
-                                            ),
-                                          )
-                                        : Text(
-                                            'Masuk',
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w600,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                  ),
-                                ),
-                              ),
+                                    )
+                                  : Text(
+                                      'Masuk',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
                             ),
-                            const SizedBox(height: 14),
-                            TextButton(
-                              onPressed: () => Get.snackbar(
-                                'Info',
-                                'Fitur lupa password belum aktif',
-                              ),
-                              child: Text(
-                                'Lupa password?',
-                                style: GoogleFonts.poppins(
-                                  color: Colors.white70,
-                                ),
-                              ),
+                          ),
+                          const SizedBox(height: 14),
+                          TextButton(
+                            onPressed: () => Get.snackbar(
+                              'Info',
+                              'Fitur lupa password belum aktif',
                             ),
-                          ],
-                        ),
+                            child: Text(
+                              'Lupa password?',
+                              style: GoogleFonts.poppins(color: Colors.black54),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -308,7 +284,6 @@ class _LoginPageState extends State<LoginPage>
     required TextEditingController controller,
     required String hint,
     bool obscure = false,
-    bool autofocus = false,
     TextInputType keyboardType = TextInputType.text,
     IconData? icon,
     Widget? suffix,
@@ -317,18 +292,17 @@ class _LoginPageState extends State<LoginPage>
       controller: controller,
       obscureText: obscure,
       keyboardType: keyboardType,
-      autofocus: autofocus,
-      style: const TextStyle(color: Colors.white),
-      cursorColor: Colors.white,
+      style: const TextStyle(color: Colors.black87),
+      cursorColor: Colors.black87,
       decoration: InputDecoration(
         filled: true,
-        fillColor: Colors.white.withOpacity(0.15),
+        fillColor: Colors.white.withOpacity(0.35),
         hintText: hint,
-        hintStyle: GoogleFonts.poppins(color: Colors.white70, fontSize: 14),
-        prefixIcon: icon != null ? Icon(icon, color: Colors.white70) : null,
+        hintStyle: GoogleFonts.poppins(color: Colors.black54, fontSize: 14),
+        prefixIcon: icon != null ? Icon(icon, color: Colors.black54) : null,
         suffixIcon: suffix,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,
         ),
         contentPadding: const EdgeInsets.symmetric(
@@ -339,30 +313,22 @@ class _LoginPageState extends State<LoginPage>
       onSubmitted: (_) => _login(),
     );
   }
-}
 
-// animasi pantulan cahaya di background
-class _LightPainter extends CustomPainter {
-  final double progress;
-  _LightPainter(this.progress);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..shader =
-          RadialGradient(
-            colors: [Colors.white.withOpacity(0.2), Colors.transparent],
-            stops: const [0.0, 1.0],
-          ).createShader(
-            Rect.fromCircle(
-              center: Offset(size.width * progress, size.height * 0.4),
-              radius: size.width * 0.6,
-            ),
-          );
-    canvas.drawRect(Offset.zero & size, paint);
+  Widget _glowCircle(double size, Color color) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color,
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.5),
+            blurRadius: 100,
+            spreadRadius: 50,
+          ),
+        ],
+      ),
+    );
   }
-
-  @override
-  bool shouldRepaint(_LightPainter oldDelegate) =>
-      oldDelegate.progress != progress;
 }
