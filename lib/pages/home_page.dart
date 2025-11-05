@@ -389,7 +389,7 @@ class _HomePageState extends State<HomePage>
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
           margin: const EdgeInsets.symmetric(vertical: 6),
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(isFocused ? 0.25 : 0.1),
